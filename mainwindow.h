@@ -59,6 +59,7 @@ private:
     void deleteField();
     void createPreviousField();
     void deletePreviousField();
+    void resizeField(int size);
 
 private slots:
     void on_newGame_triggered();
@@ -73,6 +74,12 @@ private slots:
     void on_about_triggered();
     void on_undoButton_clicked();
     void on_showScores_triggered();
+    void on_action3x3_triggered();
+    void on_action4x4_triggered();
+    void on_action5x5_triggered();
+    void on_action6x6_triggered();
+    void on_action7x7_triggered();
+    void on_action8x8_triggered();
 };
 
 #endif

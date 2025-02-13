@@ -1,6 +1,6 @@
 #include "field4.h"
 #include "ui_field4.h"
-
+#include <QDebug>
 field4::field4(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::field4)
@@ -37,6 +37,7 @@ void field4::createTiles(int size) {
             tiles[i][j]=new QLabel(this);
             tiles[i][j]->setGeometry(j*tileSize,i*tileSize,tileSize,tileSize);
             tiles[i][j]->setAlignment(Qt::AlignCenter);
+            tiles[i][j]->show();
         }
     }
 }

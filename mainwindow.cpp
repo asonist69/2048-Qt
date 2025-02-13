@@ -5,12 +5,12 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow),grid(NULL),previousGrid(NULL),size(4) {
+    this->show();
     ui->setupUi(this);
     ui->widget=new field4(this);
-    ui->widget->move(14,25);
+    ui->widget->move(13,25);
     static_cast<field4*>(ui->widget)->createTiles(size);
     this->setWindowTitle(tr("2048"));
-    this->setWindowIcon(QIcon("2048.bmp"));
     newGame();
 
     new QShortcut(QKeySequence(Qt::Key_Up), this, SLOT(on_moveUpButton_clicked()));
@@ -86,6 +86,7 @@ void MainWindow::newGame() {
     createPreviousField();
     addRandomTile();
     addRandomTile();
+    ui->widget->show();
 
     updateUI(grid);
 }
@@ -467,3 +468,64 @@ void MainWindow::on_showScores_triggered() {
     ScoresWindow scoresWindow(this);
     scoresWindow.exec();
 }
+
+void MainWindow::resizeField(int size)
+{
+    if (grid!=NULL) {
+        deleteField();
+    }
+    if (previousGrid!=NULL) {
+        deletePreviousField();
+    }
+
+    static_cast<field4*>(ui->widget)->deleteTiles(this->size);
+    this->size=size;
+    static_cast<field4*>(ui->widget)->createTiles(size);
+}
+
+void MainWindow::on_action3x3_triggered()
+{
+    if (size!=3)
+        resizeField(3);
+    newGame();
+}
+
+void MainWindow::on_action4x4_triggered()
+{
+    if (size!=4)
+        resizeField(4);
+    newGame();
+}
+
+
+void MainWindow::on_action5x5_triggered()
+{
+    if (size!=5)
+        resizeField(5);
+    newGame();
+}
+
+
+void MainWindow::on_action6x6_triggered()
+{
+    if (size!=6)
+        resizeField(6);
+    newGame();
+}
+
+
+void MainWindow::on_action7x7_triggered()
+{
+    if (size!=7)
+        resizeField(7);
+    newGame();
+}
+
+
+void MainWindow::on_action8x8_triggered()
+{
+    if (size!=8)
+        resizeField(8);
+    newGame();
+}
+
