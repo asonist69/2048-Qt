@@ -1,5 +1,6 @@
 #my_option
 /build/
+/2048.pro.user
 
 # C++ objects and libs
 *.slo
