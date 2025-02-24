@@ -1,16 +1,18 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "scoreswindow.h"
-#include "field4.h"
+#include "field.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow),grid(NULL),previousGrid(NULL),size(4) {
     this->show();
     ui->setupUi(this);
-    ui->widget=new field4(this);
+    ui->widget=new field(this);
     ui->widget->move(13,25);
-    static_cast<field4*>(ui->widget)->createTiles(size);
+    static_cast<field*>(ui->widget)->createTiles(size);
     this->setWindowTitle(tr("2048"));
+    this->setWindowIcon(QIcon("2048.bmp"));
+    this->setWindowFlags(Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
     newGame();
 
     new QShortcut(QKeySequence(Qt::Key_Up), this, SLOT(on_moveUpButton_clicked()));
@@ -27,7 +29,7 @@ MainWindow::~MainWindow() {
     if (previousGrid!=NULL) {
         deletePreviousField();
     }
-    static_cast<field4*>(ui->widget)->deleteTiles(size);
+    static_cast<field*>(ui->widget)->deleteTiles(size);
     delete ui;
 }
 
@@ -39,7 +41,7 @@ enum class Direction {
 };
 
 void MainWindow::updateUI(int **grid) {
-    static_cast<field4*>(ui->widget)->setLabels(grid,size);
+    static_cast<field*>(ui->widget)->setLabels(grid,size);
 }
 
 void MainWindow::createField() {
@@ -84,6 +86,7 @@ void MainWindow::newGame() {
 
     createField();
     createPreviousField();
+    maxNumber=2;
     addRandomTile();
     addRandomTile();
     ui->widget->show();
@@ -102,11 +105,19 @@ void MainWindow::saveGame() {
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly)) {
         QDataStream out(&file);
+        out << size;
         for (int i = 0; i < size; ++i) {
             for (int j = 0; j < size; ++j) {
                 out << grid[i][j];
             }
         }
+        out << gameOver;
+        out <<  canUndo;
+        for (int i = 0; i < size; ++i) {
+            for (int j = 0; j < size; ++j) {
+                out << previousGrid[i][j];
+            }
+         }
         file.close();
     } else {
         QMessageBox::warning(this, tr("Ошибка"), tr("Не удалось сохранить игру."));
@@ -130,22 +141,86 @@ void MainWindow::loadGame() {
     QString fileName = saveDir + "/game.qt2048";
     QFile file(fileName);
     if (file.open(QIODevice::ReadOnly)) {
-        QDataStream in(&file);
-        for (int i = 0; i < size; ++i) {
-            for (int j = 0; j < size; ++j) {
-                in >> grid[i][j];
-                if (grid[i][j] > maxNumber) {
-                    maxNumber = grid[i][j];
-                }
-            }
+        maxNumber=2;
+
+        int tmp_size;
+        bool tmp_canUndo;
+        bool tmp_gameOver;
+        int **tmp_grid, **tmp_previousGrid;
+
+        try {
+            loadSave(file, tmp_grid, tmp_previousGrid, tmp_size, tmp_gameOver, tmp_canUndo);
+        } catch(...) {
+            QMessageBox::warning(this, tr("Ошибка"), tr("Файл сохранения повреждён"));
+            file.close();
+            return;
         }
         file.close();
+        static_cast<field*>(ui->widget)->deleteTiles(this->size);
+
+        deleteField();
+        deletePreviousField();
+
+        this -> size = tmp_size;
+        this -> gameOver = tmp_gameOver;
+        this -> canUndo = tmp_canUndo;
+
+        createFieldFromSave(tmp_grid, tmp_previousGrid, tmp_size);
+
+        static_cast<field*>(ui->widget)->createTiles(size);
+
         updateUI(grid);
         ui->maxNumberLabel->setText(QString("%1").arg(maxNumber));
         checkGameOver();
     } else {
         QMessageBox::warning(this, tr("Ошибка"), tr("Не удалось загрузить игру."));
     }
+}
+
+void MainWindow::loadSave(QFile &file, int **&grid, int **&previousGrid, int &size, bool &gameOver, bool &canUndo) {
+    QDataStream in(&file);
+    in >> size;
+    grid=new int*[size];
+    for (int i = 0; i < size; ++i) {
+        grid[i]=new int[size];
+        for (int j = 0; j < size; ++j) {
+            in >> grid[i][j];
+            if (grid[i][j] > maxNumber) {
+                maxNumber = grid[i][j];
+            }
+        }
+    }
+    in >> gameOver;
+    in >>  canUndo;
+    previousGrid=new int*[size];
+    for (int i = 0; i < size; ++i) {
+        previousGrid[i]=new int[size];
+        for (int j = 0; j < size; ++j) {
+            in >> previousGrid[i][j];
+        }
+    }
+}
+
+void MainWindow::createFieldFromSave(int **&grid, int **&previousGrid, int &size) {
+    this->grid=new int*[size];
+    this->previousGrid=new int*[size];
+
+    for (int i = 0; i < size; ++i) {
+        this->grid[i]=new int[size];
+        this->previousGrid[i]=new int[size];
+        for (int j = 0; j < size; ++j) {
+            this->grid[i][j] = grid[i][j];
+            this->previousGrid[i][j] = previousGrid[i][j];
+        }
+        delete [] grid[i];
+        delete [] previousGrid[i];
+        grid[i]=NULL;
+        previousGrid[i]=NULL;
+    }
+    delete [] grid;
+    delete [] previousGrid;
+    grid=NULL;
+    previousGrid=NULL;
 }
 
 bool MainWindow::moveUp() {
@@ -293,7 +368,12 @@ void MainWindow::addRandomTile() {
     if (!emptyCells.isEmpty()) {
         int randIndex = QRandomGenerator::global()->bounded(static_cast<int>(emptyCells.size()));
         QPoint cell = emptyCells[randIndex];
-        grid[cell.x()][cell.y()] = (QRandomGenerator::global()->bounded(10) == 0) ? 4 : 2;
+        bool tmp=QRandomGenerator::global()->bounded(10) == 0;
+        grid[cell.x()][cell.y()] = (tmp) ? 4 : 2;
+        if (tmp && maxNumber<4) {
+            maxNumber=4;
+        }
+        ui->maxNumberLabel->setText(QString("%1").arg(maxNumber));
     }
 }
 
@@ -305,6 +385,7 @@ void MainWindow::checkGameOver() {
                 msgBox.setWindowTitle(tr("Поздравляем!"));
                 msgBox.setText(tr("Вы достигли 2048! Что хотите сделать?"));
                 QPushButton *newGameButton = msgBox.addButton(tr("Новая игра"), QMessageBox::YesRole);
+                QPushButton *continueGameButton = msgBox.addButton(tr("Продолжить"), QMessageBox::ActionRole);
                 QPushButton *exitButton = msgBox.addButton(tr("Выйти"), QMessageBox::NoRole);
 
                 msgBox.exec();
@@ -313,6 +394,8 @@ void MainWindow::checkGameOver() {
                     newGame();
                 } else if (msgBox.clickedButton() == exitButton) {
                     QApplication::quit();
+                } else if (msgBox.clickedButton() == continueGameButton) {
+                    gameOver=true;
                 }
                 return;
             }
@@ -367,6 +450,7 @@ void MainWindow::move(Direction dir) {
     if (moved) {
         addRandomTile();
         updateUI(grid);
+        if (gameOver==false)
         checkGameOver();
     }
 }
@@ -399,11 +483,34 @@ void MainWindow::on_saveGame_triggered() {
 }
 
 void MainWindow::on_loadGame_triggered() {
-    loadGame();
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("Внимание!"));
+    msgBox.setText(tr("Текущий прогресс будет утерян. Хотите продолжить?"));
+    QPushButton *loadGameButton = msgBox.addButton(tr("Загрузить"), QMessageBox::YesRole);
+    msgBox.addButton(tr("Продолжить"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == loadGameButton) {
+        loadGame();
+    }
 }
 
 void MainWindow::on_exitGame_triggered() {
-    QApplication::quit();
+    QMessageBox msgBox;
+    msgBox.setWindowTitle(tr("Внимание!"));
+    msgBox.setText(tr("Текущий прогресс будет утерян. Хотите сохранить?"));
+    QPushButton *saveAndQuitGameButton = msgBox.addButton(tr("Сохранить и выйти"), QMessageBox::YesRole);
+    QPushButton *quitGameButton = msgBox.addButton(tr("Выйти без сохранения"), QMessageBox::ActionRole);
+    msgBox.addButton(tr("Продолжить"), QMessageBox::ActionRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == saveAndQuitGameButton) {
+        saveGame();
+        QApplication::quit();
+    }
+    else if (msgBox.clickedButton() == quitGameButton){
+        QApplication::quit();
+    }
 }
 
 void MainWindow::on_moveUpButton_clicked()
@@ -478,9 +585,9 @@ void MainWindow::resizeField(int size)
         deletePreviousField();
     }
 
-    static_cast<field4*>(ui->widget)->deleteTiles(this->size);
+    static_cast<field*>(ui->widget)->deleteTiles(this->size);
     this->size=size;
-    static_cast<field4*>(ui->widget)->createTiles(size);
+    static_cast<field*>(ui->widget)->createTiles(size);
 }
 
 void MainWindow::on_action3x3_triggered()

@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/new/prefix1">
+        <file>2048.bmp</file>
+    </qresource>
+</RCC>

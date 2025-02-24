@@ -35,6 +35,7 @@ private:
     int size;
     int previousMaxNumber;
     bool canUndo = false;
+    bool gameOver = false;
 
     enum class Direction {
         Up,
@@ -60,6 +61,8 @@ private:
     void createPreviousField();
     void deletePreviousField();
     void resizeField(int size);
+    void loadSave(QFile &file, int **&grid, int **&previousGrid, int &size, bool &gameOver, bool &canUndo);
+    void createFieldFromSave(int **&grid, int **&previousGrid, int &size);
 
 private slots:
     void on_newGame_triggered();
