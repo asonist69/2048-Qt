@@ -1,4 +1,4 @@
-#include "field.h"
+#include "../Headers/field.h"
 #include "ui_field.h"
 #include <QDebug>
 field::field(QWidget *parent)

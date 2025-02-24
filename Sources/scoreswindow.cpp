@@ -1,4 +1,4 @@
-#include "scoreswindow.h"
+#include "../Headers/scoreswindow.h"
 
 ScoresWindow::ScoresWindow(QWidget *parent) : QDialog(parent), scoresFile("scores.dat") {
     setWindowTitle("Таблица результатов");

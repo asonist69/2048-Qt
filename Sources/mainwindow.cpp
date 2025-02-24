@@ -1,7 +1,7 @@
-#include "mainwindow.h"
+#include "../Headers/mainwindow.h"
 #include "ui_mainwindow.h"
-#include "scoreswindow.h"
-#include "field.h"
+#include "../Headers/scoreswindow.h"
+#include "../Headers/field.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow),grid(NULL),previousGrid(NULL),size(4) {
