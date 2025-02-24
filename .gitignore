@@ -1,3 +1,6 @@
+#my_option
+/build/
+
 # C++ objects and libs
 *.slo
 *.lo
