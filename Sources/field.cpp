@@ -20,7 +20,7 @@ void field::setLabels(int **grid, int size) {
             int value = grid[i][j];
             tiles[i][j]->setText(value == 0 ? "" : QString::number(value));
 
-            QString style = QString("background: %1; border: 2px solid gray; font-size: 28px; color: black;")
+            QString style = QString("background: %1; border: 2px solid gray; font-size: 22px; color: black;")
             .arg(value == 0 ? colorMap[0] : (value >= 4096 ? "yellow" : (colorMap[qCeil(qLn(value) / qLn(2))])));
 
             tiles[i][j]->setStyleSheet(style);

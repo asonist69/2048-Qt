@@ -31,4 +31,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 DISTFILES += \
     2048.ico
 
-RESOURCES +=
+RESOURCES += \
+    Sources/icon.qrc
