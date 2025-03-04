@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->widget->move(13,25);
     static_cast<field*>(ui->widget)->createTiles(size);
     this->setWindowTitle(tr("2048"));
-    this->setWindowIcon(QIcon("2048.bmp"));
+    this->setWindowIcon(QIcon(":/Images/2048.bmp"));
     this->setWindowFlags(Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
     newGame();
 
@@ -545,12 +545,17 @@ void MainWindow::on_help_triggered()
 {
     QMessageBox msgBox;
     msgBox.setWindowTitle(tr("Помощь"));
-    msgBox.setText(tr("Для управления в игре используются клавиши стрелок:\n"
+    msgBox.setText(tr("Для управления в игре используются клавиши стрелок:\n\n"
                       "Up - Вверх\n"
                       "Down - Вниз\n"
                       "Left - Влево\n"
                       "Right - Вправо\n"
-                      "Ctrl+Z - Отмена хода\n\n"
+                      "Ctrl + Z - Отмена хода\n"
+                      "Ctrl + R - Список рекордов\n"
+                      "Ctrl + S - Сохранить игру\n"
+                      "Ctrl + L - Загрузить игру\n"
+                      "Ctrl + 3..8 - Выбор размера поля\n"
+                      "Ctrl + E - Выход\n\n"
                       "Цель игры: соединить плитки, чтобы достигнуть 2048."));
     msgBox.setStandardButtons(QMessageBox::Ok);
     msgBox.exec();
